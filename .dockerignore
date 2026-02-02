@@ -1,0 +1,17 @@
+# Игнорируемые файлы при сборке Docker образа
+*.md
+.git
+.gitignore
+.vscode
+.idea
+*.exe
+*.test
+tools/
+load_test.sh
+test.lua
+test.ps1
+*.log
+k8s/
+Dockerfile
+.dockerignore
+

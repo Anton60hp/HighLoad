@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: iot-processor
+  namespace: iot-stream-processor
+  labels:
+    app: iot-processor
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: iot-processor
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - iot-stream-processor
+

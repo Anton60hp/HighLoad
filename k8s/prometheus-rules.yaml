@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: iot-processor-alerts
+  namespace: iot-stream-processor
+  labels:
+    app: iot-processor
+    release: prometheus
+spec:
+  groups:
+  - name: iot-processor
+    interval: 30s
+    rules:
+    - alert: HighAnomalyRate
+      expr: rate(anomalies_detected_total[1m]) > 5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High anomaly detection rate"
+        description: "Anomaly rate is {{ $value }} per minute for device {{ $labels.device_id }}"
+    
+    - alert: HighLatency
+      expr: histogram_quantile(0.95, rate(request_duration_seconds_bucket{endpoint="/metric"}[5m])) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency detected"
+        description: "p95 latency is {{ $value }}s"
+    
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{endpoint="/metric",status=~"5.."}[1m]) > 10
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High error rate"
+        description: "Error rate is {{ $value }} requests/sec"
+    
+    - alert: ServiceDown
+      expr: up{job="iot-processor"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "IoT Processor service is down"
+        description: "Service has been down for more than 1 minute"

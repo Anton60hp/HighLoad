@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-processor
+  namespace: iot-stream-processor
+  labels:
+    app: iot-processor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: iot-processor
+  template:
+    metadata:
+      labels:
+        app: iot-processor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: iot-processor
+        image: iot-processor:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: iot-processor-config
+              key: REDIS_ADDR
+        - name: ANALYTICS_WORKERS
+          valueFrom:
+            configMapKeyRef:
+              name: iot-processor-config
+              key: ANALYTICS_WORKERS
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-processor-service
+  namespace: iot-stream-processor
+  labels:
+    app: iot-processor
+    release: prometheus  
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: iot-processor
+

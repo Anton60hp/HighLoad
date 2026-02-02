@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-processor-config
+  namespace: iot-stream-processor
+data:
+  REDIS_ADDR: "redis-service:6379"
+  PORT: "8080"
+  ANALYTICS_WORKERS: "8"
+
